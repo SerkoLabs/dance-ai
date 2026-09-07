@@ -16,8 +16,15 @@ export function EmptyState({ title, message }: StateProps) {
   return <StateCard symbol="＋" title={title} message={message} />;
 }
 
-export function ErrorState({ title, message }: StateProps & { onRetry?: () => void }) {
-  return <StateCard symbol="!" title={title} message={message} />;
+export function ErrorState({ title, message, onRetry }: StateProps & { onRetry?: () => void }) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.symbol}><Text style={styles.symbolText}>!</Text></View>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.message}>{message}</Text>
+      {onRetry ? <Button label="Tekrar dene" variant="secondary" onPress={onRetry} /> : null}
+    </View>
+  );
 }
 
 export function StartupErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
@@ -51,7 +58,7 @@ function StateCard({ symbol, title, message }: StateProps & { symbol: string }) 
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 22, alignItems: 'center', gap: 8 },
+  card: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, padding: 22, alignItems: 'center', gap: 10 },
   symbol: { width: 48, height: 48, borderRadius: 24, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   symbolText: { color: colors.accent, fontSize: 22, fontWeight: '900' },
   title: { color: colors.ink, fontSize: 18, fontWeight: '800', textAlign: 'center' },
