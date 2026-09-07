@@ -5,14 +5,14 @@
 - Lifecycle version: 1.1
 - Project: Dance AI
 - Mode: Continuous autonomy
-- Current lifecycle stage: 09 — App shell/navigation
-- Current implementation phase: Phase 1
-- Current task: Phase 1 shell implemented; verification gate is PARTIAL
-- Gate status: Stage 07 PASS; Phase 0 PARTIAL; Phase 1 PARTIAL pending executable quality checks
-- Last audit: Stage 06 authorization design review (FALLBACK)
-- Blockers: dependency lockfile/clean install cannot currently be produced in the active runtime; GitHub-hosted Actions jobs are failing before any step starts (`runner_id: 0`, empty steps)
-- Decisions requiring human input: None for further repository-local work
-- Next eligible action: continue independent repository-local work while keeping Phase 0/1 verification PARTIAL; do not claim either gate PASS until clean install/lint/typecheck/test/export execute successfully.
+- Current lifecycle stage: 09/10 boundary — secure data/auth foundation before first vertical slice
+- Current implementation phase: Phase 2
+- Current task: repository-local Phase 2 implementation completed as far as available resources permit
+- Gate status: Stage 07 PASS; Phase 0 PARTIAL; Phase 1 PARTIAL; Phase 2 PARTIAL
+- Last audit: Stage 06 authorization design review (FALLBACK); executable Phase 2 authorization gate not yet run
+- Blockers: no Dance AI Supabase project exists; creating one requires explicit organization selection and cost confirmation. Dependency lockfile/clean install is also blocked in the active runtime, and GitHub-hosted Actions jobs fail before runner steps start.
+- Decisions requiring human input: choose the Supabase organization/project destination and approve the disclosed project cost before a new remote project can be created. Existing `FindAntalya` and `SvoiVantalii` projects must not be repurposed implicitly.
+- Next eligible action: after a Dance AI Supabase project is explicitly selected/created, apply migrations to a non-production/test target, run pgTAP allow/deny tests, configure the email OTP template, generate project types, run real auth integration tests, then re-evaluate the Phase 2 gate before Phase 3.
 
 ## Completed lifecycle artifacts
 
@@ -40,19 +40,40 @@ Implemented on `feat/phase-0-foundation`:
 Unverified/blocking evidence:
 - `package-lock.json` is not present because dependency resolution was unavailable in the execution environment;
 - local `npm ci`, lint, typecheck, tests and export could not be truthfully completed;
-- GitHub Actions runs 34137278780 and subsequent branch runs fail before runner steps begin, so they provide no code-quality result.
+- GitHub Actions runs fail before runner steps begin (`runner_id: 0`, empty steps), so they provide no code-quality result.
 
 ### Phase 1 — PARTIAL
 
-Implemented on `feat/phase-1-app-shell` at commit `b83186dbe6d414d5a00688c6350d2e53706d2699`:
+Implemented on `feat/phase-1-app-shell` and inherited by Phase 2:
 - root provider boundary with TanStack Query and controlled configuration failure/retry;
 - auth/app Expo Router groups;
-- Welcome, Sign-in placeholder, Projects, New Dance, Project resolver, Section Learn, Camera, Attempt, Full Practice and Settings routes;
+- Welcome, Projects, New Dance, project/section/camera/attempt/full-practice/settings routes;
 - minimal reusable Screen, Button, loading/empty/error/offline primitives;
 - unfinished backend-dependent actions are explicitly disabled/marked rather than mocked as successful;
 - camera/media privacy promises remain visible and microphone use is not introduced.
 
 Phase 1 cannot be marked PASS until route/render startup and lint/typecheck/test/export checks execute.
+
+### Phase 2 — PARTIAL
+
+Implemented on `feat/phase-2-data-security`:
+- core Supabase schema migration with constraints, indexes, update triggers and approved retention/deletion fields;
+- explicit grants + RLS migration for owner-readable tables; internal analysis/job tables have no client access;
+- three private Storage buckets with source/attempt owner-prefix INSERT/SELECT policies and no client delete/update path;
+- service-only `private` analysis queue RPCs with `FOR UPDATE SKIP LOCKED`, leases, retry budget, idempotent completion and pinned `search_path`;
+- pgTAP authorization/queue test files covering owner/cross-user/anon/write-deny and lease semantics;
+- typed mobile Supabase client factory using only public URL/publishable key;
+- native chunked Expo SecureStore session adapter and web AsyncStorage fallback;
+- auth bootstrap with JWT claims validation, foreground auto-refresh and user-scoped query-cache clearing;
+- real passwordless email OTP request/verify UI and protected auth/app route groups;
+- sign-out is real; account deletion remains visibly disabled until deletion orchestration is implemented.
+
+Phase 2 cannot pass yet because:
+- migrations have not been applied to a clean/test Supabase instance;
+- pgTAP RLS/queue tests have not executed;
+- no real OTP email template/project exists for Dance AI;
+- session persistence/restart has not been verified on a real iOS/Android target;
+- mobile lint/typecheck/test/export remain unexecuted due the Phase 0 tooling blocker.
 
 ## Quality commands
 
@@ -63,13 +84,16 @@ Phase 1 cannot be marked PASS until route/render startup and lint/typecheck/test
 - test: `npm test -- --runInBand`
 - build/export sanity: `npm run export`
 - worker tests: `python -m pytest services/analysis-worker/tests`
-- database tests: pending Phase 2 migration/RLS setup
+- database migrations: `supabase db reset` on a local/test target
+- database authorization tests: `supabase test db`
 
 ## Current external-resource state
 
+- Connected Supabase account currently exposes `FindAntalya` and `SvoiVantalii`; neither was modified.
+- No Dance AI Supabase project has been created.
+- No remote Supabase migration or Edge Function deployment has been performed.
 - No production deployment has been performed.
 - No app-store submission has been performed.
-- No remote Supabase project has been created or mutated by this lifecycle run.
 - No paid analysis-worker host has been selected.
 - No production credentials or secrets are stored in the repository.
 
@@ -80,3 +104,5 @@ Phase 1 cannot be marked PASS until route/render startup and lint/typecheck/test
 - 2026-09-07 — Architecture and database critical reviews used documented Sol fallback because Astra was not available in the active runtime.
 - 2026-09-07 — Added Phase 0 repository/tooling foundation; gate remains PARTIAL because executable dependency/tooling verification is blocked.
 - 2026-09-07 — Added Phase 1 app shell/navigation and reusable state primitives; gate remains PARTIAL pending executable checks.
+- 2026-09-07 — Added Phase 2 schema/RLS/Storage/queue migrations, security tests, Supabase auth adapter, email OTP flow and route guards.
+- 2026-09-07 — Phase 2 stopped at the external-resource gate: no Dance AI Supabase project exists and project creation requires organization selection + cost confirmation.
