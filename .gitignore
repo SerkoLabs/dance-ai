@@ -1,0 +1,41 @@
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native generated projects / credentials
+/android/
+/ios/
+.kotlin/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs and caches
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.tsbuildinfo
+.DS_Store
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Worker local/runtime output
+services/analysis-worker/.cache/
+services/analysis-worker/tmp/
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
