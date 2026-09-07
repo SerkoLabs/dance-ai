@@ -67,3 +67,42 @@ Material product/architecture decisions are recorded here so later agents do not
 **Decision:** No feed, followers, comments, rankings, challenges, marketplace, or automatic social publishing before beta evidence.
 
 **Why:** They do not prove the core value action: learn one imported choreography section and improve through feedback.
+
+## D-011 — Passwordless email OTP is the first authentication flow
+
+**Decision:** The first mobile authentication flow uses `signInWithOtp` plus user-entered email OTP verification rather than a magic-link/deep-link dependency.
+
+**Why:** It satisfies the approved user flow while keeping the first vertical slice independent of mobile deep-link configuration. Supabase documents `{{ .Token }}` email templates and `verifyOtp({ email, token, type: 'email' })` for this flow.
+
+**Evidence reviewed:**
+- https://supabase.com/docs/reference/javascript/auth-signinwithotp
+- https://supabase.com/docs/reference/javascript/auth-verifyotp
+- https://supabase.com/docs/guides/auth/auth-email-templates
+
+**Consequence:** A real Supabase project must configure the auth email template to deliver an OTP before the Phase 2 auth gate can pass.
+
+## D-012 — Native auth session data uses chunked Expo SecureStore
+
+**Decision:** Native Supabase Auth session persistence uses Expo SecureStore. Values are split into bounded UTF-8 chunks with an atomic manifest swap so JWT/session payloads are not forced into a single SecureStore value. Web fallback uses AsyncStorage.
+
+**Why:** Current Supabase Expo guidance demonstrates SecureStore on native but explicitly warns that a single value over roughly 2 KB may fail. Chunking preserves the approved secure-storage boundary without adding an encryption dependency solely to work around the per-value limit.
+
+**Evidence reviewed:**
+- https://supabase.com/docs/guides/auth/quickstarts/with-expo-react-native-social-auth
+- https://supabase.com/docs/reference/javascript/initializing
+- Supabase official Expo social-auth example `lib/supabase.ts`, reviewed at commit `c2ebfebb39ef6c9579c6a30abbf64221e00675a1`.
+
+**Consequence:** Device-level persistence still requires real iOS/Android restart testing before release. User-scoped TanStack Query cache is cleared on identity change/sign-out.
+
+## D-013 — Storage size limits now; exact MIME allowlist after device compatibility evidence
+
+**Decision:** Phase 2 creates all three buckets as private and applies source/attempt size limits plus strict owner-prefix policies. `allowed_mime_types` remains unset until Phase 3 real-device picker/recorder tests establish the exact iOS/Android formats that the worker can decode reliably.
+
+**Why:** Supabase supports bucket-level MIME restrictions, but prematurely guessing the platform MIME set can block valid device media. File type/container remains untrusted input and must be validated by trusted finalization/worker code.
+
+**Evidence reviewed:**
+- https://supabase.com/docs/guides/storage/buckets/creating-buckets
+- https://supabase.com/docs/guides/storage/schema/helper-functions
+- https://supabase.com/docs/guides/storage/schema/design
+
+**Consequence:** MIME restriction must be tightened in a reviewed migration before release after the Phase 3 device matrix is known.
